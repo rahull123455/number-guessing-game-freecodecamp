@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export PGPASSWORD="Vinayak@7860"
+
 PSQL="psql --username=postgres --dbname=number_guess -t --no-align -c"
 
 SECRET_NUMBER=$((RANDOM % 1000 + 1))
@@ -12,8 +14,9 @@ USER_ID=$($PSQL "SELECT user_id FROM users WHERE username='$USERNAME';")
 
 if [[ -z $USER_ID ]]
 then
-  INSERT_USER_RESULT=$($PSQL "INSERT INTO users(username) VALUES('$USERNAME');")
+  $PSQL "INSERT INTO users(username) VALUES('$USERNAME');" > /dev/null
   echo "Welcome, $USERNAME! It looks like this is your first time here."
+  USER_ID=$($PSQL "SELECT user_id FROM users WHERE username='$USERNAME';")
 else
   GAMES_PLAYED=$($PSQL "SELECT COUNT(*) FROM games WHERE user_id=$USER_ID;")
   BEST_GAME=$($PSQL "SELECT MIN(guesses) FROM games WHERE user_id=$USER_ID;")
@@ -42,11 +45,6 @@ do
   fi
 done
 
-if [[ -z $USER_ID ]]
-then
-  USER_ID=$($PSQL "SELECT user_id FROM users WHERE username='$USERNAME';")
-fi
-
-INSERT_GAME_RESULT=$($PSQL "INSERT INTO games(user_id, guesses) VALUES($USER_ID, $NUMBER_OF_GUESSES);")
+$PSQL "INSERT INTO games(user_id, guesses) VALUES($USER_ID, $NUMBER_OF_GUESSES);" > /dev/null
 
 echo "You guessed it in $NUMBER_OF_GUESSES tries. The secret number was $SECRET_NUMBER. Nice job!"
